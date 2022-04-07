@@ -1,0 +1,21 @@
+package client;
+
+import java.awt.Dimension;
+
+import javax.swing.JFrame;
+import javax.swing.UIManager;
+
+public class Client {
+	public Client(String ip, String port) {
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) {
+		}
+		JFrame j = new JFrame();
+		j.setTitle("Dijkstra Algorithm");
+		j.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		j.setSize(new Dimension(2000, 900));
+		j.add(new MainWindow(ip,port));
+		j.setVisible(true);
+	}
+}

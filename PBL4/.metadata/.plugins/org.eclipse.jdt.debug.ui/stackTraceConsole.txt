@@ -1,0 +1,2 @@
+private Graph graph;
+	private GraphPanel graphPanel;

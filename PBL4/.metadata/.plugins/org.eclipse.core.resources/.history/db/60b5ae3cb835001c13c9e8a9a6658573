@@ -1,0 +1,71 @@
+package server;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.List;
+import java.util.Vector;
+
+public class App {
+	Vector<Xuly> clients = new Vector<Xuly>();
+
+	public static void main(String[] args) {
+		new App();
+	}
+
+	public App() {
+		try {
+			ServerSocket server = new ServerSocket();
+			while (true) {
+				Socket soc = server.accept();
+				Xuly x = new Xuly(soc, this);
+				clients.add(x);
+				x.start();
+			}
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+
+	}
+
+	class Xuly extends Thread {
+		App cs;
+		Socket soc;
+		String name;
+
+		public Xuly(Socket soc, App cs) {
+			this.soc = soc;
+			this.cs = cs;
+		}
+
+		public double[][] handleData(String textArray) {
+			String[] gr = textArray.split("\n");
+			int length = gr.length;
+			double[][] arr = new double[length][length];
+			int n = 0;
+			for (String item : gr) {
+				String[] gr2 = item.trim().split("\\s+");
+				for (int i = 0; i < length; i++) {
+					arr[n][i] = Double.parseDouble(gr2[i].trim());
+				}
+				n++;
+			}
+			return arr;
+		}
+
+		public void run() {
+			try {
+				DataOutputStream dos = new DataOutputStream(soc.getOutputStream());
+				DataInputStream dis = new DataInputStream(soc.getInputStream());
+				while (true) {
+					String mgs = dis.readUTF();
+					double[][] data = handleData(mgs);
+					List<List<Integer>> rs = algo.Xuly(data);
+					dos.writeUTF(rs.toString());
+				}
+			} catch (Exception e) {
+			}
+		}
+	}
+}

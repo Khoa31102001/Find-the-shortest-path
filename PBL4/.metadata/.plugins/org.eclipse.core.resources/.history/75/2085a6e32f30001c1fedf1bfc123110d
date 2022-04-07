@@ -1,0 +1,386 @@
+package model;
+
+import java.awt.Point;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.PriorityQueue;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
+import algo.dijkstra.NodeComparator;
+
+public class Graph {
+	private int count = 1;
+	private List<Node> nodes = new ArrayList<>();
+	private List<Edge> edges = new ArrayList<>();
+	private Node source;
+	private Node destination;
+	private boolean solved = false;
+	private String textArray = null;
+	private String textSource = null;
+	private String textDestination = null;
+
+	private String TextNode = "";
+
+	public String getTextNode() {
+		return TextNode;
+	}
+
+	public void setTextNode(String textNode) {
+		TextNode = textNode;
+	}
+
+	public void setTextArray(String textArray) {
+		this.textArray = textArray;
+	}
+
+	public String getTextSource() {
+		return textSource;
+	}
+
+	public void setTextSource(String textSource) {
+		this.textSource = textSource;
+	}
+
+	public String getTextDestination() {
+		return textDestination;
+	}
+
+	public void setTextDestination(String textDestination) {
+		this.textDestination = textDestination;
+	}
+
+	public List<Node> getNodes() {
+		return nodes;
+	}
+
+	public void setNodes(List<Node> nodes) {
+		this.nodes = nodes;
+	}
+
+	public List<Edge> getEdges() {
+		return edges;
+	}
+
+	public void setEdges(List<Edge> edges) {
+		this.edges = edges;
+	}
+
+	public Node getSource() {
+		return source;
+	}
+
+	public void setSource(Node source) {
+		if (nodes.contains(source))
+			this.source = source;
+	}
+
+	public Node getDestination() {
+		return destination;
+	}
+
+	public void setDestination(Node destination) {
+		if (nodes.contains(destination))
+			this.destination = destination;
+	}
+
+	public boolean isSolved() {
+		return solved;
+	}
+
+	public void setSolved(boolean solved) {
+		this.solved = solved;
+	}
+
+	public boolean isSource(Node node) {
+		return source == node;
+	}
+
+	public boolean isDestination(Node node) {
+		return destination == node;
+	}
+
+	public Node GetNodeById(int id) {
+		for (Node node : nodes) {
+			if (node.getId() == id)
+				return node;
+		}
+		return null;
+	}
+
+	public List<Node> GetFriendNode(Node node) {
+		List<Node> list = new ArrayList<>();
+		for (Edge edge : edges) {
+			if (edge.getStart() == node) {
+				list.add(edge.getEnd());
+			}
+			if (edge.getEnd() == node) {
+				list.add(edge.getStart());
+			}
+		}
+		return list;
+	}
+
+	public List<Node> GetFriendNodeForDestion(Node node) {
+		List<Node> list = new ArrayList<>();
+		for (Edge edge : edges) {
+			if (edge.getEnd() == node) {
+				list.add(edge.getStart());
+			}
+		}
+		return list;
+	}
+
+	public boolean doesNodeHaveEdge(Node node) {
+		for (Edge item : edges)
+			if (item.getStart() == node || item.getEnd() == node)
+				return true;
+		return false;
+	}
+
+	public void addNode(Point p) {
+		Node new_Node = new Node(p);
+		addNode(new_Node);
+	}
+
+	public void addNode(Node node) {
+		if (node.getId() == 0) {
+			node.setId(nodes.size() + 1);
+		}
+		nodes.add(node);
+		if (node.getId() == 1)
+			source = node;
+	}
+
+	public void addEdge(Edge edge) {
+		boolean added = false;
+		for (Edge item : edges) {
+			if (item.equals(edge)) {
+				added = true;
+				break;
+			}
+		}
+		if (!added)
+			edges.add(edge);
+	}
+
+	public void deleteNode(Node node) {
+		nodes.remove(node);
+		List<Edge> dele = new ArrayList<>();
+		for (Edge item : edges) {
+			if (item.hasNode(node)) {
+				dele.add(item);
+			}
+		}
+		for (Edge item : dele) {
+			edges.remove(item);
+		}
+	}
+
+	public void clear() {
+		count = 1;
+		nodes.clear();
+		edges.clear();
+		solved = false;
+		source = null;
+		destination = null;
+	}
+
+	public void SetTextNode() {
+		boolean check = true;
+		if (!textSource.matches("\\d+")) {
+			TextNode += "Đỉnh nhập vào không phải số";
+			check = false;
+		}
+		if (!textDestination.matches("\\d+")) {
+			if (TextNode != "") {
+				TextNode += ", ";
+			}
+			TextNode += "Đỉnh cuối nhập vào không phải số";
+
+			check = false;
+		}
+		if (check) {
+			if (GetNodeById(Integer.parseInt(textSource)) == null) {
+				if (TextNode != "") {
+					TextNode += ", ";
+				}
+				TextNode += "Source không có trong graph";
+			} else {
+				setSource(GetNodeById(Integer.parseInt(textSource)));
+			}
+			if (GetNodeById(Integer.parseInt(textDestination)) == null) {
+				if (TextNode != "") {
+					TextNode += ", ";
+				}
+				TextNode += "Destination không có trong graph";
+			} else {
+				setDestination(GetNodeById(Integer.parseInt(textDestination)));
+			}
+
+		}
+
+	}
+
+	public void GetGraphArray() {
+		boolean check = true;
+		String[] group = textArray.split("\n");
+		List<Integer> list = new ArrayList<>();
+		for (String item : group) {
+			if (item.matches("\\s+"))
+				continue;
+			String[] gr = item.trim().split("\\s+");
+			if (gr.length != 3 || !gr[0].matches("\\d+") || !gr[1].matches("\\d+") || !gr[2].matches("\\d+")) {
+				check = false;
+				continue;
+			}
+
+			int id1 = Integer.parseInt(gr[0].trim());
+			int id2 = Integer.parseInt(gr[1].trim());
+			int distance = Integer.parseInt(gr[2].trim());
+			if (!list.contains(id1)) {
+				Node node = new Node(id1);
+				list.add(id1);
+				addNode(node);
+			}
+			if (!list.contains(id2)) {
+				Node node2 = new Node(id2);
+				list.add(id2);
+				addNode(node2);
+			}
+			Edge edge = new Edge(GetNodeById(id1), GetNodeById(id2), distance);
+			addEdge(edge);
+		}
+		if (check)
+			SetLocation();
+	}
+
+	public String getTextArray() {
+		return textArray;
+	}
+
+	public class NodeComparator implements Comparator<Node> {
+
+		@Override
+		public int compare(Node o1, Node o2) {
+			return o1.getId() - o2.getId();
+		}
+
+	}
+
+	private void SetLocation() {
+		getSource().setCoord(4100, 1300);
+		int x = 0;
+		int y = 0;
+		if (getNodes().size() < 10) {
+			x = 100;
+			y = 100;
+		} else if (getNodes().size() < 16) {
+			x = 200;
+			y = 200;
+		}
+		PriorityQueue<Node> unchecked = new PriorityQueue<Node>(getNodes().size(), new NodeComparator());
+		unchecked.add(source);
+		while (!unchecked.isEmpty()) {
+			Node node = unchecked.poll();
+			List<Node> list = GetFriendNode(node);
+			int x2 = 0;
+			for (Node node2 : list) {
+				if (node.getX() != 0 && node.getY() != 0 && node2.getX() != 0 && node2.getY() != 0) {
+					continue;
+				}
+				if (node2.getX() != 0 || node2.getY() != 0) {
+					node.setCoord(node2.getX() + x, node2.getY() - y + y * x2);
+				} else {
+					node2.setCoord(node.getX() + x, node.getY() - y + y * x2);
+					x2++;
+					unchecked.add(node2);
+				}
+
+			}
+			unchecked.remove(node);
+		}
+	}
+
+	public void setAnotherNode() {
+		List<Node> listA = new ArrayList<>();
+		for (Node node : nodes) {
+			if (node.getCoord().getX() == 0 && node.getCoord().getY() == 0) {
+				listA.add(node);
+			}
+		}
+		if (listA.isEmpty())
+			return;
+		listA.get(0).setCoord(source.getX() - 70, source.getY() + 300);
+		int x = 0;
+		int y = 0;
+		if (getNodes().size() < 10) {
+			x = 100;
+			y = 100;
+		} else if (getNodes().size() < 16) {
+			x = 200;
+			y = 200;
+		}
+		PriorityQueue<Node> unchecked = new PriorityQueue<Node>(getNodes().size(), new NodeComparator());
+		unchecked.add(listA.get(0));
+		while (!unchecked.isEmpty()) {
+			Node node = unchecked.poll();
+			List<Node> list = GetFriendNode(node);
+			int x2 = 0;
+			for (Node node2 : list) {
+				if (node.getX() != 0 && node.getY() != 0 && node2.getX() != 0 && node2.getY() != 0) {
+					continue;
+				}
+				if (node2.getX() != 0 || node2.getY() != 0) {
+					node.setCoord(node2.getX() - x, node2.getY() + y - y * x2);
+				} else {
+					node2.setCoord(node.getX() - x, node.getY() + y - y * x2);
+					x2++;
+					unchecked.add(node2);
+				}
+
+			}
+			unchecked.remove(node);
+		}
+
+	}
+
+	public void setLocationDestination() {
+		if (!destination.getPath().contains(source)) {
+			destination.setCoord(getSource().getX() - 100, getSource().getY());
+			int x = 0;
+			int y = 0;
+			if (getNodes().size() < 10) {
+				x = 100;
+				y = 100;
+			} else if (getNodes().size() < 16) {
+				x = 200;
+				y = 200;
+			}
+			PriorityQueue<Node> unchecked = new PriorityQueue<Node>(getNodes().size(), new NodeComparator());
+			unchecked.add(destination);
+			while (!unchecked.isEmpty()) {
+				Node node = unchecked.poll();
+				List<Node> list = GetFriendNode(node);
+				int x2 = 0;
+				for (Node node2 : list) {
+					if (node.getX() != 0 && node.getY() != 0 && node2.getX() != 0 && node2.getY() != 0) {
+						continue;
+					}
+					if (node2.getX() != 0 || node2.getY() != 0) {
+						node.setCoord(node2.getX() - x, node2.getY() - y + y * x2);
+					} else {
+						node2.setCoord(node.getX() - x, node.getY() - y + y * x2);
+						x2++;
+						unchecked.add(node2);
+					}
+
+				}
+				unchecked.remove(node);
+			}
+		}
+	}
+
+}
